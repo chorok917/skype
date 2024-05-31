@@ -107,21 +107,10 @@ public class FriendsPanel extends JPanel implements ImgImpl {
 	private void sendMsg() {
 		if (!writeMsgBox.getText().equals("")) {
 			String msg = writeMsgBox.getText();
-			// TODO
 			chattingFrame.getmContext().clickSendSecretMessageBtn(msg);
 			writeMsgBox.setText("");
 			writeMsgBox.requestFocus();
 		}
-//		if (writeMsgBox.getText().equals("")) {
-//			System.out.println("공백입니다.");
-//		} else {
-//			String msg = writeMsgBox.getText();
-//			// TODO
-//			chattingFrame.getmContext().clickSendSecretMessageBtn(msg);
-////			mainMsgBox.append(msg);
-//			writeMsgBox.setText("");
-//			writeMsgBox.requestFocus();
-//		}
 	}
 
 	// getter, setter

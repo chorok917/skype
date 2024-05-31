@@ -22,7 +22,7 @@ public class ChattingFrame extends JFrame implements ImgImpl {
 	private JButton makeRoom; // 방 만들기 탭
 	private JButton logOut; // 로그아웃 탭
 	private FriendsPanel friendsPanel; // 친구 패널
-	private JPanel p2; // 방 만들기 패널
+	private MakeRoomPanel makeRoomPanel; // TODO
 	private JPanel p3; // 로그아웃 패널
 
 	// Constructor
@@ -47,7 +47,7 @@ public class ChattingFrame extends JFrame implements ImgImpl {
 
 		mainPanel = new JPanel(); // TODO
 		friendsPanel = new FriendsPanel(this);
-		p2 = new JPanel();
+		makeRoomPanel = new MakeRoomPanel(this);
 		p3 = new JPanel();
 		tabPane = new JTabbedPane(JTabbedPane.LEFT);
 
@@ -79,7 +79,7 @@ public class ChattingFrame extends JFrame implements ImgImpl {
 		friendsPanel.setLayout(null);
 
 		tabPane.addTab("Friends", null, friendsPanel, null);
-		tabPane.addTab("Make Room", null, p2, null);
+		tabPane.addTab("Make Room", null, makeRoomPanel, null);
 		tabPane.addTab("Log Out", null, p3, null);
 	}
 
@@ -142,14 +142,6 @@ public class ChattingFrame extends JFrame implements ImgImpl {
 
 	public void setFriendsPanel(FriendsPanel friendsPanel) {
 		this.friendsPanel = friendsPanel;
-	}
-
-	public JPanel getP2() {
-		return p2;
-	}
-
-	public void setP2(JPanel p2) {
-		this.p2 = p2;
 	}
 
 	public JPanel getP3() {

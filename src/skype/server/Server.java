@@ -38,6 +38,11 @@ public class Server {
 	private String from;
 	private String message;
 
+	// TODO
+	private boolean roomCheck;
+	private Vector<MyRoom> madeRooms = new Vector<>();
+	
+	
 	// Constructor
 	public Server() {
 		serverFrame = new ServerFrame(this);
@@ -137,6 +142,7 @@ public class Server {
 		private BufferedReader reader; // 읽어들이는거
 		private PrintWriter writer; // 출력하는거
 		private String name; // 유저 이름
+		public String myRoomName;
 
 		public ConnectedUser(Socket socket) {
 			this.socket = socket;
@@ -168,6 +174,9 @@ public class Server {
 				newUser();
 				// 방금 연결된 유저측에서 유저 명단 업데이트를 위한 출력
 				connectedUser();
+				
+//				madeRoom();
+				makeRoom();
 			} catch (IOException e) {
 				e.printStackTrace();
 				JOptionPane.showMessageDialog(null, "접속 에러 !", "알림", JOptionPane.ERROR_MESSAGE);
@@ -175,16 +184,42 @@ public class Server {
 			}
 		}
 
+
+		private void madeRoom() {
+			System.out.println("Server madeRoom methods");
+			for (int i = 0; i < madeRooms.size(); i++) {
+				MyRoom myRoom = madeRooms.elementAt(i);
+				writer("MadeRoom/" + myRoom.roomName);
+			}
+		}
+
 		@Override
 		public void run() {
+//			try {
+//				while (true) {
+//					String str = reader.readLine();
+//					checkProtocall(str);
+//					System.out.println("서버에서 클라이언트로 보냄.");
+//				}
+//			} catch (Exception e) {
+//				serverViewAppendWriter("[유저 접속 끊김] " + name + "님이 나갔습니다.\n");
+//				connectedUsers.remove(this);
+//				broadCast("UserOut/" + name);
+//			}
 			try {
 				while (true) {
 					String str = reader.readLine();
 					checkProtocall(str);
-					System.out.println("작동함");
 				}
-			} catch (Exception e) {
-				serverViewAppendWriter("[유저 접속 끊김] " + name + "님이 나갔습니다.\n");
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, "유저 접속 끊김 !", "알림", JOptionPane.ERROR_MESSAGE);
+				serverViewAppendWriter("[에러] 유저 " + name +" 접속 끊김 ! !\n");
+				for (int i = 0; i < madeRooms.size(); i++) {
+					MyRoom myRoom = madeRooms.elementAt(i);
+					if(myRoom.roomName.equals(this.myRoomName)) {
+						myRoom.removeRoom(this);
+					}
+				}
 				connectedUsers.remove(this);
 				broadCast("UserOut/" + name);
 			}
@@ -203,16 +238,18 @@ public class Server {
 				message = tokenizer.nextToken();
 				secretMessage();
 			}
-//			else if (protocol.equals("MakeRoom")) {
-//				makeRoom();
-//
-//			} else if (protocol.equals("OutRoom")) {
+			else if (protocol.equals("MakeRoom")) {
+				makeRoom();
+				System.out.println("방 만들기 체크 프로토콜");
+			} 
+//			else if (protocol.equals("OutRoom")) {
 //				outRoom();
 //
 //			} else if (protocol.equals("EnterRoom")) {
 //				enterRoom();
 //			}
 		}
+
 
 		/**
 		 * Client로 보내는 응답
@@ -236,13 +273,7 @@ public class Server {
 				writer("ConnectedUser/" + user.name);
 			}
 		}
-
-		@Override
-		public void chatting() {
-			serverViewAppendWriter("[메세지] " + from + "_" + message + "\n");
-			// TODO Auto-generated method stub
-		}
-
+		
 		@Override
 		public void secretMessage() {
 			serverViewAppendWriter("[비밀 메세지] " + name + "ㅡ>" + from + " : " + message + "\n");
@@ -253,11 +284,92 @@ public class Server {
 					user.writer("SecretMessage/" + name + "/" + message);
 				}
 			}
-			// TODO Auto-generated method stub
 		}
 
+		public void makeRoom() {
+			System.out.println("Server makeRoom methods");
+			if (roomCheck) {
+				myRoomName = from;
+				MyRoom myRoom = new MyRoom(from, this);
+				madeRooms.add(myRoom);
+				serverViewAppendWriter("[방 생성]" + name + "_" + from + "\n");
+				
+				newRoom();
+				writer("MakeRoom/" + from);
+			}
+			
+			for (int i = 0; i < madeRooms.size(); i++) {
+				MyRoom room = madeRooms.elementAt(i);
+
+				if (room.roomName.equals(from)) {
+					writer("FailMakeRoom/" + from);
+					serverViewAppendWriter("[방 생성 실패]" + name + "_" + from + "\n");
+					roomCheck = false;
+				} else {
+					roomCheck = true;
+				}
+			}
+
+		}
+		
+		public void newRoom() {
+			broadCast("NewRoom/" + from);
+		}
+		
+		@Override
+		public void chatting() {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	} // end of ConnectedUser class
 
+	private class MyRoom {
+
+		private String roomName;
+		// myRoom에 들어온 사람들의 정보가 담김.
+		private Vector<ConnectedUser> myRoom = new Vector<>();
+
+		public MyRoom(String roomName, ConnectedUser connectedUser) {
+			this.roomName = roomName;
+			this.myRoom.add(connectedUser);
+			connectedUser.myRoomName = roomName;
+		}
+
+		/**
+		 * 방에 있는 사람들에게 출력
+		 */
+		private void roomBroadCast(String msg) {
+			for (int i = 0; i < myRoom.size(); i++) {
+				ConnectedUser user = myRoom.elementAt(i);
+
+				user.writer(msg);
+			}
+		}
+
+		private void addUser(ConnectedUser connectedUser) {
+			myRoom.add(connectedUser);
+		}
+
+		private void removeRoom(ConnectedUser user) {
+			myRoom.remove(user);
+			boolean empty = myRoom.isEmpty();
+			if (empty) {
+				for (int i = 0; i < madeRooms.size(); i++) {
+					MyRoom myRoom = madeRooms.elementAt(i);
+
+					if (myRoom.roomName.equals(roomName)) {
+						madeRooms.remove(this);
+						serverViewAppendWriter("[방 삭제]" + user.name + "_" + from + "\n");
+						roomBroadCast("OutRoom/" + from);
+						broadCast("EmptyRoom/" + from);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
 	// getter, setter
 	public int getSocketNum() {
 		return socketNum;

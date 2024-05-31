@@ -1,5 +1,6 @@
 package skype.client;
 
+import java.awt.Container;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,6 +11,7 @@ import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -41,7 +43,11 @@ public class Client implements ProtocallImpl {
 	private String protocol;
 	private String from;
 	private String message;
-	
+	// 방 만들기
+	private String myRoomName;
+	private JButton makeRoomBtn;
+	private Vector<String> roomNameList = new Vector<>();
+	private JList<String> roomList;
 
 	// Constructor
 	public Client() {
@@ -144,22 +150,17 @@ public class Client implements ProtocallImpl {
 			message = tokenizer.nextToken();
 			secretMessage();
 		}
-//		else if (protocol.equals("MakeRoom")) {
-//			makeRoom();
-//
-//		} else if (protocol.equals("MadeRoom")) {
-//			madeRoom();
-//
-//		} else if (protocol.equals("NewRoom")) {
-//			newRoom();
-//
-//		} else if (protocol.equals("OutRoom")) {
-//			outRoom();
-//
-//		} else if (protocol.equals("EnterRoom")) {
-//			enterRoom();
-//
-//		} 
+		else if (protocol.equals("MakeRoom")) {
+			makeRoom();
+		} else if (protocol.equals("MadeRoom")) {
+			madeRoom();
+		} else if (protocol.equals("NewRoom")) {
+			newRoom();
+		} else if (protocol.equals("OutRoom")) {
+			
+		} else if (protocol.equals("EnterRoom")) {
+
+		} 
 		else if (protocol.equals("NewUser")) {
 			newUser();
 
@@ -179,6 +180,13 @@ public class Client implements ProtocallImpl {
 //			userIdList.remove(from);
 //			userList.setListData(userIdList);
 //		}
+	}
+
+	private void madeRoom() {
+		roomNameList.add(from);
+		if (!(roomNameList.size() == 0)) {
+			roomList.setListData(roomNameList);
+		}
 	}
 
 	@Override
@@ -206,16 +214,14 @@ public class Client implements ProtocallImpl {
 		} else {
 			mainMsgBox.append("[" + from + "] \n" + message + "\n");
 		}
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	// 서버에서 받아오는거
 	public void secretMessage() {
-//		if(!name.equals(from)) {
-//			chattingFrame.getFriendsPanel().getMainMsgBox().append("[" + from + "]님으로부터 비밀메시지 : " + message + "\n");
-//		}
-		if (name != from) {
+		if (name.equals(from)) {
+			chattingFrame.getFriendsPanel().getMainMsgBox().append("[나]에게 비밀메시지 : " + message + "\n");
+		} else {
 			chattingFrame.getFriendsPanel().getMainMsgBox().append("[" + from + "]님으로부터 비밀메시지 : " + message + "\n");
 		}
 	}
@@ -224,18 +230,6 @@ public class Client implements ProtocallImpl {
 	public void clickSendSecretMessageBtn(String msg) {
 		String user = (String) chattingFrame.getFriendsPanel().getUserList().getSelectedValue();
 		writer("SecretMessage/" + user + "/" + msg);
-		chattingFrame.getFriendsPanel().getMainMsgBox().append("[나] -> [" + user + "]" + " : " + msg + "\n");
-//		String user = (String) chattingFrame.getFriendsPanel().getUserList().getSelectedValue();
-//		if (user == from) {
-//			writer("SecretMessage/" + user + "/" + msg);
-//			chattingFrame.getFriendsPanel().getMainMsgBox().append("[" + from + "]님께 전달완료" + " : " + msg + "\n");
-//		} else if (user == null) {
-//			writer("SecretMessage/" + user + "/" + msg);
-//			chattingFrame.getFriendsPanel().getMainMsgBox().append("나에게 보내는 메시지 : " + msg + "\n");
-//		} else if (user == name) {
-//			writer("SecretMessage/" + user + "/" + msg);
-//			chattingFrame.getFriendsPanel().getMainMsgBox().append("나에게 보내는 메시지 : " + msg + "\n");
-//		}
 	}
 
 	/**
@@ -243,11 +237,25 @@ public class Client implements ProtocallImpl {
 	 * 
 	 * @param msg
 	 */
-	public void clickSendMsgBtn(String msg) {
-		writer("Chatting/" + msg);
-		System.out.println("샌드메시지 메소드 작동");
-	}
 
+	// TODO
+	// 새로운 방 만들기 정보 서버에 보내기
+	public void clickMakeRoomBtn(String roomName) {
+		writer("MakeRoom/" + roomName);
+	}
+	
+	public void makeRoom() {
+		myRoomName = from;
+		makeRoomBtn.setEnabled(false);
+	}
+	
+	// 서버에서 받는거
+	public void newRoom() {
+		roomNameList.add(from);
+		roomList.setListData(roomNameList);
+	}
+	
+	
 	// getter, setter
 	public UserLogin getUserLogin() {
 		return userLogin;
